@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  OneWare fork packaging overrides.
+
+  Imported from src/Directory.Build.targets so that it is evaluated *after* each
+  project body has set <AssemblyName>.
+
+  Goals:
+    * Ship the libraries on NuGet under the "OneWare." package id prefix
+      (e.g. OneWare.OmniSharp.Extensions.LanguageClient) while keeping the
+      original assembly names, namespaces and public API completely unchanged,
+      so consuming apps only have to swap the PackageReference.
+    * Allow the release pipeline to stamp an explicit version without requiring
+      GitVersion to be installed.
+-->
+<Project>
+
+  <!-- ================= Package identity ================= -->
+  <PropertyGroup>
+    <PackageIdPrefix Condition="'$(PackageIdPrefix)' == ''">OneWare.</PackageIdPrefix>
+    <!--
+      PackageId defaults to $(AssemblyName) inside NuGet.Build.Tasks.Pack.targets,
+      which runs after this file, so setting it here wins.
+      AssemblyName is deliberately NOT changed: OneWare.OmniSharp.Extensions.LanguageClient
+      still contains OmniSharp.Extensions.LanguageClient.dll.
+    -->
+    <PackageId Condition="'$(IsPackable)' == 'true' and '$(AssemblyName)' != ''">$(PackageIdPrefix)$(AssemblyName)</PackageId>
+  </PropertyGroup>
+
+  <!-- ================= Fork metadata ================= -->
+  <PropertyGroup Condition="'$(IsPackable)' == 'true'">
+    <Company>OneWare</Company>
+    <Authors>OneWare, David Driscoll and contributors</Authors>
+    <Copyright>Copyright OmniSharp and contributors © 2018, OneWare © 2026</Copyright>
+    <PackageProjectUrl>https://github.com/hendrikmennen/csharp-language-server-protocol</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/hendrikmennen/csharp-language-server-protocol</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>$(PackageTags);oneware;fork;net10</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Description Condition="'$(PackageDescription)' != ''">$(PackageDescription) — OneWare maintained fork of OmniSharp.Extensions, targeting .NET 10 with full LSP 3.17/3.18 support. Drop-in replacement: assembly names and namespaces are unchanged.</Description>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)../README.md" Pack="true" PackagePath="/" Visible="false" />
+  </ItemGroup>
+
+  <!-- ================= Package icon ================= -->
+  <!--
+    Upstream expects NUKE to download the OmniSharp logo to .nuke/temp/packageicon.png.
+    Outside of a NUKE build that file is absent, which makes `dotnet pack` fail with NU5046.
+    Prefer a committed build/packageicon.png (drop the OneWare logo there), then the NUKE
+    temp file, and otherwise pack without an icon.
+  -->
+  <PropertyGroup>
+    <_OneWareIconPath Condition="Exists('$(MSBuildThisFileDirectory)../build/packageicon.png')">$(MSBuildThisFileDirectory)../build/packageicon.png</_OneWareIconPath>
+    <_OneWareIconPath Condition="'$(_OneWareIconPath)' == '' and Exists('$(MSBuildThisFileDirectory)../.nuke/temp/packageicon.png')">$(MSBuildThisFileDirectory)../.nuke/temp/packageicon.png</_OneWareIconPath>
+    <PackageIcon Condition="'$(_OneWareIconPath)' == ''"></PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsPackable)' == 'true' and '$(_OneWareIconPath)' != ''">
+    <None Include="$(_OneWareIconPath)" Pack="true" PackagePath="/images/" Visible="false" />
+  </ItemGroup>
+
+  <!-- ================= Explicit version stamping (used by the release pipeline) ================= -->
+  <!--
+    GitVersion is only available when building through NUKE. The release workflow instead
+    passes -p:OneWarePackageVersion=1.2.3[-suffix], derived from the pushed git tag.
+  -->
+  <PropertyGroup Condition="'$(OneWarePackageVersion)' != ''">
+    <_OneWareVersionCore>$([System.Text.RegularExpressions.Regex]::Match($(OneWarePackageVersion), '^[0-9]+\.[0-9]+\.[0-9]+').Value)</_OneWareVersionCore>
+    <_OneWareVersionMajorMinor>$([System.Text.RegularExpressions.Regex]::Match($(OneWarePackageVersion), '^[0-9]+\.[0-9]+').Value)</_OneWareVersionMajorMinor>
+
+    <Version>$(OneWarePackageVersion)</Version>
+    <PackageVersion>$(OneWarePackageVersion)</PackageVersion>
+    <!-- Major.Minor.0.0 keeps binding redirects stable across patch releases. -->
+    <AssemblyVersion>$(_OneWareVersionMajorMinor).0.0</AssemblyVersion>
+    <FileVersion>$(_OneWareVersionCore).0</FileVersion>
+    <InformationalVersion>$(OneWarePackageVersion)</InformationalVersion>
+  </PropertyGroup>
+
+</Project>

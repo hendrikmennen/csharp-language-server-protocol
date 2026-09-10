@@ -178,9 +178,7 @@ jobs:
         with:
           name: nuget
           pattern: nuget-*
-  Publish:
-    needs: Merge
-    uses: RocketSurgeonsGuild/actions/.github/workflows/publish-nuget.yml@v0.3.19
-    secrets:
-      RSG_NUGET_API_KEY: '${{ secrets.RSG_NUGET_API_KEY }}'
-      RSG_AZURE_DEVOPS: '${{ secrets.RSG_AZURE_DEVOPS }}'
+  # NOTE (OneWare fork): the upstream "Publish" job pushed the OmniSharp.* packages to
+  # nuget.org using RocketSurgeonsGuild secrets that do not exist in this fork.
+  # Publishing is handled by .github/workflows/release.yml instead, which ships the
+  # OneWare.* packages on a tag push.

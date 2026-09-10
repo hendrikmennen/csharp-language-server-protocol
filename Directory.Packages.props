@@ -60,7 +60,15 @@
     <PackageVersion Include="Snapper" Version="2.4.1" />
     <PackageVersion Include="Xunit.SkippableFact" Version="1.5.61" />
     <PackageVersion Include="Nerdbank.Streams" Version="2.13.16" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.3.0" />
+    <!--
+      Keep Roslyn pinned to the *lowest* compiler version we want to support.
+      Source generators are loaded by the compiler that is running, so referencing a
+      newer Microsoft.CodeAnalysis than the running csc causes CS9057 and the generator
+      is silently skipped (which manifests as hundreds of CS0246/CS0426 errors).
+      5.0.0 == the compiler shipped with the .NET 10.0.1xx SDK band.
+    -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0" />
+    <!-- Analyzer-authoring rules only; does not affect which compiler can load the generator. -->
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.3.0" />
     <PackageVersion Include="DryIoc.Internal" Version="5.4.3" />
   </ItemGroup>

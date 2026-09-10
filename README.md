@@ -2,6 +2,37 @@
 
 This is an implementation of the [Language Server Protocol](https://github.com/Microsoft/language-server-protocol) written entirely in C# for .NET.
 
+## OneWare fork
+
+This fork is published on NuGet under the `OneWare.` prefix, built against .NET 10 with full LSP 3.17/3.18 coverage.
+
+| Upstream package | OneWare package |
+| --- | --- |
+| `OmniSharp.Extensions.LanguageProtocol` | `OneWare.OmniSharp.Extensions.LanguageProtocol` |
+| `OmniSharp.Extensions.LanguageClient` | `OneWare.OmniSharp.Extensions.LanguageClient` |
+| `OmniSharp.Extensions.LanguageServer` | `OneWare.OmniSharp.Extensions.LanguageServer` |
+| `OmniSharp.Extensions.JsonRpc` | `OneWare.OmniSharp.Extensions.JsonRpc` |
+
+Only the **package ids** change. Assembly names, namespaces, public API and the strong name key
+are identical to upstream, so migrating is a one-line change:
+
+```xml
+<PackageReference Include="OneWare.OmniSharp.Extensions.LanguageClient" Version="1.0.0" />
+<PackageReference Include="OneWare.OmniSharp.Extensions.LanguageProtocol" Version="1.0.0" />
+```
+
+Target frameworks: `netstandard2.0`, `netstandard2.1`, `net8.0`, `net10.0`.
+
+### Releasing
+
+Push a `v*` tag (or run the `release` workflow manually) and
+[.github/workflows/release.yml](.github/workflows/release.yml) builds, tests, packs and pushes to
+nuget.org. It requires a `NUGET_API_SECRET` repository secret.
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0
+```
+
 # Getting Started
 1. git clone
 2. run `build.ps1` / `build.sh`

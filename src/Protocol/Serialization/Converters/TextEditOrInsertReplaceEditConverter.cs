@@ -25,16 +25,22 @@ namespace OmniSharp.Extensions.LanguageServer.Protocol.Serialization.Converters
 
         public override TextEditOrInsertReplaceEdit ReadJson(JsonReader reader, Type objectType, TextEditOrInsertReplaceEdit existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var result = JObject.Load(reader);
-
-            // InsertReplaceEdit have a name, TextEdits do not
-            var command = result["insert"];
-            if (command?.Type == JTokenType.String)
+            if (reader.TokenType == JsonToken.Null)
             {
-                return new TextEditOrInsertReplaceEdit(result.ToObject<InsertReplaceEdit>(serializer));
+                return null!;
             }
 
-            return new TextEditOrInsertReplaceEdit(result.ToObject<TextEdit>(serializer));
+            var result = JObject.Load(reader);
+
+            // A TextEdit is `{ range, newText }`, an InsertReplaceEdit is `{ insert, replace, newText }`.
+            // Both `insert` and `replace` are Range *objects*, so the union has to be discriminated on
+            // their presence rather than on any value they might hold.
+            if (result["insert"] is JObject || result["replace"] is JObject)
+            {
+                return new TextEditOrInsertReplaceEdit(result.ToObject<InsertReplaceEdit>(serializer)!);
+            }
+
+            return new TextEditOrInsertReplaceEdit(result.ToObject<TextEdit>(serializer)!);
         }
 
         public override bool CanRead => true;
