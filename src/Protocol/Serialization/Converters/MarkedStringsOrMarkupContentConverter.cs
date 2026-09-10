@@ -26,7 +26,16 @@ namespace OmniSharp.Extensions.LanguageServer.Protocol.Serialization.Converters
             if (reader.TokenType == JsonToken.StartObject)
             {
                 var result = JObject.Load(reader);
-                return new MarkedStringsOrMarkupContent(result.ToObject<MarkupContent>(serializer));
+
+                // `Hover.contents` allows a *single* MarkedString object as well as an array of them,
+                // and both MarkedString and MarkupContent are `{ ..., "value": string }`. They can only
+                // be told apart by their sibling key: MarkedString has `language`, MarkupContent has `kind`.
+                if (result["language"] != null && result["kind"] == null)
+                {
+                    return new MarkedStringsOrMarkupContent(result.ToObject<MarkedString>(serializer)!);
+                }
+
+                return new MarkedStringsOrMarkupContent(result.ToObject<MarkupContent>(serializer)!);
             }
 
             if (reader.TokenType == JsonToken.StartArray)
