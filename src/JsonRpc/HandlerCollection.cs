@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reflection;
 using DryIoc;
-using MediatR;
+using OmniSharp.Extensions.JsonRpc.Dispatching;
 
 namespace OmniSharp.Extensions.JsonRpc
 {

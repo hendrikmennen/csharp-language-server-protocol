@@ -1,12 +1,12 @@
 ﻿//HintName: RegistrationParams.cs
 using Lsp.Tests.Integration.Fixtures;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.DebugAdapter.Protocol;
 using OmniSharp.Extensions.DebugAdapter.Protocol.Events;
 using OmniSharp.Extensions.DebugAdapter.Protocol.Models;
 using OmniSharp.Extensions.DebugAdapter.Protocol.Requests;
 using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.JsonRpc.Dispatching;
 using OmniSharp.Extensions.JsonRpc.Generation;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client;
@@ -25,12 +25,12 @@ namespace OmniSharp.Extensions.LanguageServer.Protocol.Client
 {
     [Parallel, Method(ClientNames.RegisterCapability, Direction.ServerToClient)]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute]
-    public partial interface IRegisterCapabilityHandler : IJsonRpcRequestHandler<RegistrationParams, MediatR.Unit>
+    public partial interface IRegisterCapabilityHandler : IJsonRpcRequestHandler<RegistrationParams, OmniSharp.Extensions.JsonRpc.Dispatching.Unit>
     {
     }
 
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute, System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute]
-    abstract public partial class RegisterCapabilityHandlerBase : AbstractHandlers.Request<RegistrationParams, MediatR.Unit>, IRegisterCapabilityHandler
+    abstract public partial class RegisterCapabilityHandlerBase : AbstractHandlers.Request<RegistrationParams, OmniSharp.Extensions.JsonRpc.Dispatching.Unit>, IRegisterCapabilityHandler
     {
     }
 }

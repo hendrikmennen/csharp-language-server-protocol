@@ -7,7 +7,7 @@ using System.Reactive.Disposables;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
+using OmniSharp.Extensions.JsonRpc.Dispatching;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -75,7 +75,7 @@ namespace OmniSharp.Extensions.JsonRpc
                 using var scope = serviceScopeFactory.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<IRequestContext>();
                 context.Descriptor = descriptor;
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var mediator = scope.ServiceProvider.GetRequiredService<IRequestDispatcher>();
 
                 await HandleNotification(mediator, descriptor, @params ?? Activator.CreateInstance(descriptor.Params!), token).ConfigureAwait(false);
             }
@@ -153,7 +153,7 @@ namespace OmniSharp.Extensions.JsonRpc
                 using var scope = serviceScopeFactory.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<IRequestContext>();
                 context.Descriptor = descriptor;
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var mediator = scope.ServiceProvider.GetRequiredService<IRequestDispatcher>();
 
                 token.ThrowIfCancellationRequested();
 
@@ -196,12 +196,12 @@ namespace OmniSharp.Extensions.JsonRpc
                                                                 .Where(x => x.Name == nameof(SendRequest))
                                                                 .First(x => x.GetGenericArguments().Length == 2);
 
-        public static Task HandleNotification(IMediator mediator, IHandlerDescriptor handler, object @params, CancellationToken token) =>
+        public static Task HandleNotification(IRequestDispatcher mediator, IHandlerDescriptor handler, object @params, CancellationToken token) =>
             (Task) SendRequestUnit
                   .MakeGenericMethod(handler.Params!)
                   .Invoke(null, new[] { mediator, @params, token });
 
-        public static Task HandleRequest(IMediator mediator, IHandlerDescriptor descriptor, object @params, CancellationToken token)
+        public static Task HandleRequest(IRequestDispatcher mediator, IHandlerDescriptor descriptor, object @params, CancellationToken token)
         {
             if (!descriptor.HasReturnType)
             {
@@ -215,12 +215,12 @@ namespace OmniSharp.Extensions.JsonRpc
                          .Invoke(null, new[] { mediator, @params, token });
         }
 
-        private static Task SendRequest<T>(IMediator mediator, T request, CancellationToken token)
+        private static async Task<Unit> SendRequest<T>(IRequestDispatcher mediator, T request, CancellationToken token)
             where T : IRequest<Unit> =>
-            mediator.Send(request, token);
+            await mediator.Send(request, token).ConfigureAwait(false);
 
-        private static Task<TResponse> SendRequest<T, TResponse>(IMediator mediator, T request, CancellationToken token)
+        private static async Task<TResponse> SendRequest<T, TResponse>(IRequestDispatcher mediator, T request, CancellationToken token)
             where T : IRequest<TResponse> =>
-            mediator.Send(request, token);
+            await mediator.Send(request, token).ConfigureAwait(false);
     }
 }

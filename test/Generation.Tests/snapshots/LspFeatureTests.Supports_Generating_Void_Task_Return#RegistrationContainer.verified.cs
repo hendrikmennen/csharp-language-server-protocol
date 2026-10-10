@@ -4,7 +4,7 @@
 //     This code was generated a code generator.
 // </auto-generated>
 // ------------------------------------------------------------------------------
-using MediatR;
+using OmniSharp.Extensions.JsonRpc.Dispatching;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.JsonRpc.Generation;
 using OmniSharp.Extensions.LanguageServer.Protocol;

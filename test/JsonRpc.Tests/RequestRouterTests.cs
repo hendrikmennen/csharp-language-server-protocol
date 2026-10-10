@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DryIoc;
 using NSubstitute;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.JsonRpc.Server;
 using Xunit;
@@ -32,7 +33,9 @@ namespace JsonRpc.Tests
             registry.Populate(collection, ServiceProvider);
 
             var request = new Request(Guid.NewGuid().ToString(), "$/my/something/awesome", "123123123123");
-            await mediator.RouteRequest(mediator.GetDescriptors(request), request, CancellationToken.None);
+            var response = await mediator.RouteRequest(mediator.GetDescriptors(request), request, CancellationToken.None);
+            Assert.False(response.IsError);
+            Assert.Equal(1000L, ((JToken) response.Response!.Result!).Value<long>());
 
             await method.Received(1).Invoke(Arg.Any<string>());
         }
@@ -93,6 +96,47 @@ namespace JsonRpc.Tests
             await mediator.RouteNotification(mediator.GetDescriptors(notification), notification, CancellationToken.None);
 
             method.Received(1).Invoke();
+        }
+
+        [Fact]
+        public async Task ShouldMapUnitResponseToNull()
+        {
+            var handler = Substitute.For<MediatorTestsRequestHandlerOfTRequest.IExecuteCommandHandler>();
+            handler.Handle(Arg.Any<MediatorTestsRequestHandlerOfTRequest.ExecuteCommandParams>(), Arg.Any<CancellationToken>())
+                   .Returns(OmniSharp.Extensions.JsonRpc.Dispatching.Unit.Task);
+            var collection = new HandlerCollection(
+                Substitute.For<IResolverContext>(),
+                new AssemblyScanningHandlerTypeDescriptorProvider(new[] { typeof(HandlerResolverTests).Assembly })
+            ) { handler };
+            AutoSubstitute.Provide<IHandlersManager>(collection);
+            var router = AutoSubstitute.Resolve<RequestRouter>();
+            var request = new Request("unit", "workspace/executeCommand", JObject.FromObject(new { Command = "test" }));
+
+            var response = await router.RouteRequest(router.GetDescriptors(request), request, CancellationToken.None);
+
+            Assert.False(response.IsError);
+            Assert.Null(response.Response!.Result);
+        }
+
+        [Fact]
+        public async Task ShouldPropagateSynchronousHandlerExceptionWithoutReflectionWrapper()
+        {
+            var expected = new InvalidOperationException("handler failed");
+            var handler = Substitute.For<MediatorTestsRequestHandlerOfTRequest.IExecuteCommandHandler>();
+            handler.Handle(Arg.Any<MediatorTestsRequestHandlerOfTRequest.ExecuteCommandParams>(), Arg.Any<CancellationToken>())
+                   .Returns<Task<OmniSharp.Extensions.JsonRpc.Dispatching.Unit>>(_ => throw expected);
+            var collection = new HandlerCollection(
+                Substitute.For<IResolverContext>(),
+                new AssemblyScanningHandlerTypeDescriptorProvider(new[] { typeof(HandlerResolverTests).Assembly })
+            ) { handler };
+            AutoSubstitute.Provide<IHandlersManager>(collection);
+            var router = AutoSubstitute.Resolve<RequestRouter>();
+            var request = new Request("error", "workspace/executeCommand", JObject.FromObject(new { Command = "test" }));
+
+            var actual = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                router.RouteRequest(router.GetDescriptors(request), request, CancellationToken.None));
+
+            Assert.Same(expected, actual);
         }
     }
 }

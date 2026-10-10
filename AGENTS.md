@@ -10,10 +10,12 @@ that block [OneWare Studio](https://github.com/one-ware/OneWare) faster than ups
 
 ## Fork invariants — do not break these
 
-1. **Assembly names, namespaces and public API stay identical to upstream.** Only the NuGet
+1. **Assembly names, protocol namespaces and the strong-name key stay identical to upstream.** Only the NuGet
    *package id* is prefixed with `OneWare.`. `OneWare.OmniSharp.Extensions.LanguageClient`
    still contains `OmniSharp.Extensions.LanguageClient.dll`. This is what makes the packages a
-   drop-in replacement.
+   replacement. Exception: 1.0.2 removes MediatR completely in favor of repository-owned MIT
+   `OmniSharp.Extensions.JsonRpc.Dispatching` contracts. This changes public type identities;
+   consumers/plugins must recompile and replace their contract imports. See README migration notes.
 2. **The strong-name key `lsp.snk` is committed and must not change.** Public key token
    `6d868dff454e6022`, the same as the official packages.
 3. **All fork-specific packaging lives in [src/OneWare.Packaging.targets](src/OneWare.Packaging.targets)**,

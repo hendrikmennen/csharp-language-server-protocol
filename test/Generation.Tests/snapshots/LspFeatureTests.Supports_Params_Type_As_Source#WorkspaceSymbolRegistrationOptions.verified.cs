@@ -1,6 +1,6 @@
 ﻿//HintName: WorkspaceSymbolRegistrationOptions.cs
 using System.Diagnostics;
-using MediatR;
+using OmniSharp.Extensions.JsonRpc.Dispatching;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.JsonRpc.Generation;

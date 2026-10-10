@@ -1,4 +1,4 @@
-using MediatR;
+using OmniSharp.Extensions.JsonRpc.Dispatching;
 
 namespace OmniSharp.Extensions.LanguageServer.Protocol.Models
 {

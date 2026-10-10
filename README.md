@@ -13,12 +13,14 @@ This fork is published on NuGet under the `OneWare.` prefix, built against .NET 
 | `OmniSharp.Extensions.LanguageServer` | `OneWare.OmniSharp.Extensions.LanguageServer` |
 | `OmniSharp.Extensions.JsonRpc` | `OneWare.OmniSharp.Extensions.JsonRpc` |
 
-Only the **package ids** change. Assembly names, namespaces, public API and the strong name key
-are identical to upstream, so migrating is a one-line change:
+Assembly names and the strong name key remain identical to upstream. Starting with **1.0.2**,
+the request contracts are repository-owned MIT code instead of an external mediator dependency.
+This is a **binary breaking change**: recompile applications and plugins against the new packages,
+and upgrade the entire package closure together. Protocol model namespaces and wire formats remain unchanged.
 
 ```xml
-<PackageReference Include="OneWare.OmniSharp.Extensions.LanguageClient" Version="1.0.0" />
-<PackageReference Include="OneWare.OmniSharp.Extensions.LanguageProtocol" Version="1.0.0" />
+<PackageReference Include="OneWare.OmniSharp.Extensions.LanguageClient" Version="1.0.2" />
+<PackageReference Include="OneWare.OmniSharp.Extensions.LanguageProtocol" Version="1.0.2" />
 ```
 
 Target frameworks: `netstandard2.0`, `netstandard2.1`, `net8.0`, `net10.0`.
@@ -46,8 +48,34 @@ We have an implementation of JSON-RPC designed to implement the [JSON-RPC](https
 
 For more information about using the `JsonRpcServer` on it's own [here](./docs/jsonrpc.md).
 
-## MediatR
-Internally this library revolves around the request and response model.  To make things easier we use [MediatR](https://github.com/jbogard/MediatR) as core piece that manages how requests and responses are handled.
+## Request dispatch
+`OmniSharp.Extensions.JsonRpc.Dispatching` contains the repository-owned `IRequest<TResponse>`,
+`IRequestHandler<TRequest, TResponse>`, `Unit`, `IPipelineBehavior<TRequest, TResponse>` and
+`IRequestDispatcher` contracts. The implementation is original code under this repository's MIT license;
+it does not copy, embed, downgrade or depend on MediatR.
+
+For custom models, handlers or pipelines, replace `using MediatR;` with
+`using OmniSharp.Extensions.JsonRpc.Dispatching;`. Handler methods retain their existing
+`Task<TResponse> Handle(TRequest, CancellationToken)` signature; notifications return `Task<Unit>`.
+Replace direct `IMediator` injection with `IRequestDispatcher` if you used the routing dispatcher.
+This dispatcher only supports protocol requests (including notifications as unit-response requests),
+not general-purpose publish, streaming, pre/post-processors or exception-handler registrations.
+Custom behaviors still register through `Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(MyBehavior<,>))`.
+
+Routing selects the descriptor's handler within a separate DI scope for each invocation.
+Behaviors execute in registration order, outermost first, and may short-circuit dispatch.
+`next()` retains the current cancellation token; `next(token)` replaces it for downstream behaviors
+and the handler. Exceptions and cancellation propagate to the existing JSON-RPC/LSP/DAP routing logic.
+Only type adapters are cached, so handlers and scoped dependencies are never shared across requests.
+Source generators use the same contracts, including the new `Unit` type.
+
+To validate a local build before publishing:
+
+```bash
+dotnet pack src/Client/Client.csproj -c Release -p:OneWarePackageVersion=1.0.2 -o ./artifacts/nuget
+# Pack JsonRpc.Generators, JsonRpc, Protocol, Shared and Server to the same directory as well.
+dotnet restore path/to/Consumer.csproj --source ./artifacts/nuget --source https://api.nuget.org/v3/index.json
+```
 
 ## Microsoft.Extensions.*
 We re-use some of the common packages used by .NET Core.

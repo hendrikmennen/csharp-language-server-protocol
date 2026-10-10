@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using MediatR;
+using OmniSharp.Extensions.JsonRpc.Dispatching;
 
 namespace OmniSharp.Extensions.JsonRpc
 {
@@ -36,7 +36,6 @@ namespace OmniSharp.Extensions.JsonRpc
             typeof(IJsonRpcNotificationHandler<>),
             typeof(IJsonRpcRequestHandler<>),
             typeof(IJsonRpcRequestHandler<,>),
-            typeof(IRequestHandler<>),
             typeof(IRequestHandler<,>),
         };
 

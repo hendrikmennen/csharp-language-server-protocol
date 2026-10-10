@@ -8,8 +8,8 @@
   Goals:
     * Ship the libraries on NuGet under the "OneWare." package id prefix
       (e.g. OneWare.OmniSharp.Extensions.LanguageClient) while keeping the
-      original assembly names, namespaces and public API completely unchanged,
-      so consuming apps only have to swap the PackageReference.
+      original assembly names and protocol namespaces unchanged.
+      Version 1.0.2 changes request contract identities; consumers must recompile.
     * Allow the release pipeline to stamp an explicit version without requiring
       GitVersion to be installed.
 -->
@@ -17,6 +17,7 @@
 
   <!-- ================= Package identity ================= -->
   <PropertyGroup>
+    <OneWarePackageVersion Condition="'$(OneWarePackageVersion)' == ''">1.0.2</OneWarePackageVersion>
     <PackageIdPrefix Condition="'$(PackageIdPrefix)' == ''">OneWare.</PackageIdPrefix>
     <!--
       PackageId defaults to $(AssemblyName) inside NuGet.Build.Tasks.Pack.targets,
@@ -37,7 +38,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>$(PackageTags);oneware;fork;net10</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Description Condition="'$(PackageDescription)' != ''">$(PackageDescription) — OneWare maintained fork of OmniSharp.Extensions, targeting .NET 10 with full LSP 3.17/3.18 support. Drop-in replacement: assembly names and namespaces are unchanged.</Description>
+    <Description Condition="'$(PackageDescription)' != ''">$(PackageDescription) — OneWare maintained fork of OmniSharp.Extensions, targeting .NET 10 with full LSP 3.17/3.18 support and repository-owned MIT request dispatch. Assembly names are unchanged; recompile consumers when upgrading to 1.0.2.</Description>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(IsPackable)' == 'true'">
@@ -61,10 +62,10 @@
     <None Include="$(_OneWareIconPath)" Pack="true" PackagePath="/images/" Visible="false" />
   </ItemGroup>
 
-  <!-- ================= Explicit version stamping (used by the release pipeline) ================= -->
+  <!-- ================= Version stamping (defaults to the current fork release) ================= -->
   <!--
-    GitVersion is only available when building through NUKE. The release workflow instead
-    passes -p:OneWarePackageVersion=1.2.3[-suffix], derived from the pushed git tag.
+    The release workflow overrides the default with
+    -p:OneWarePackageVersion=1.2.3[-suffix], derived from the pushed git tag.
   -->
   <PropertyGroup Condition="'$(OneWarePackageVersion)' != ''">
     <_OneWareVersionCore>$([System.Text.RegularExpressions.Regex]::Match($(OneWarePackageVersion), '^[0-9]+\.[0-9]+\.[0-9]+').Value)</_OneWareVersionCore>

@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using MediatR;
+using OmniSharp.Extensions.JsonRpc.Dispatching;
 using Newtonsoft.Json.Linq;
 using NSubstitute;
 using OmniSharp.Extensions.JsonRpc;

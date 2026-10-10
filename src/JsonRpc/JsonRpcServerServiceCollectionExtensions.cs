@@ -5,7 +5,7 @@ using System.Reactive.Concurrency;
 using System.Threading;
 using System.Threading.Tasks;
 using DryIoc;
-using MediatR;
+using OmniSharp.Extensions.JsonRpc.Dispatching;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -94,31 +94,13 @@ namespace OmniSharp.Extensions.JsonRpc
             );
             container.RegisterMany<InstanceHasStarted>(nonPublicServiceTypes: true, reuse: Reuse.Singleton);
 
-            return container.AddJsonRpcMediatR();
+            return container.AddJsonRpcDispatcher();
         }
 
-        internal static IContainer AddJsonRpcMediatR(this IContainer container)
+        internal static IContainer AddJsonRpcDispatcher(this IContainer container)
         {
-            var mediatRAssembly = typeof(IMediator).Assembly;
-            var licenseAccessorType = mediatRAssembly.GetType("MediatR.Licensing.LicenseAccessor", throwOnError: true)!;
-            var licenseValidatorType = mediatRAssembly.GetType("MediatR.Licensing.LicenseValidator", throwOnError: true)!;
-
-            container.RegisterMany(new[] { mediatRAssembly }, Registrator.Interfaces, Reuse.ScopedOrSingleton);
-            container.RegisterDelegate(
-                licenseAccessorType,
-                typeof(ILoggerFactory),
-                loggerFactory => Activator.CreateInstance(licenseAccessorType, loggerFactory)!,
-                Reuse.Singleton
-            );
-            container.RegisterDelegate(
-                licenseValidatorType,
-                typeof(ILoggerFactory),
-                loggerFactory => Activator.CreateInstance(licenseValidatorType, loggerFactory)!,
-                Reuse.Singleton
-            );
             container.RegisterMany<RequestContext>(Reuse.Scoped);
-            // Select the desired constructor
-            container.Register<IMediator, Mediator>(made: Made.Of(() => new Mediator(Arg.Of<IServiceProvider>())));
+            container.Register<Dispatching.IRequestDispatcher, Dispatching.RequestDispatcher>(Reuse.Scoped);
             container.Register(typeof(IRequestHandler<,>), typeof(RequestHandler<,>));
             container.Register(typeof(IRequestHandler<,>), typeof(RequestHandlerDecorator<,>), setup: Setup.Decorator);
 

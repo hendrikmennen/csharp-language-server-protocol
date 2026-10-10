@@ -70,7 +70,6 @@
                 <ModulePath>.*DryIoc\.Internal\.dll</ModulePath>
                 <ModulePath>.*FluentAssertions\.dll</ModulePath>
                 <ModulePath>.*GitVersion\.Tool\.dll</ModulePath>
-                <ModulePath>.*MediatR\.dll</ModulePath>
                 <ModulePath>.*Microsoft\.CodeAnalysis\.Analyzers\.dll</ModulePath>
                 <ModulePath>.*Microsoft\.CodeAnalysis\.CSharp\.Workspaces\.dll</ModulePath>
                 <ModulePath>.*Microsoft\.Extensions\.Configuration\.Binder\.dll</ModulePath>

@@ -1,9 +1,9 @@
-using MediatR;
+using OmniSharp.Extensions.JsonRpc.Dispatching;
 using Newtonsoft.Json.Linq;
 
 namespace OmniSharp.Extensions.JsonRpc
 {
-    public class DelegatingRequest<T> : IRequest<JToken>, IRequest
+    public class DelegatingRequest<T> : IRequest<JToken>
     {
         public DelegatingRequest(object value) => Value = typeof(T) == typeof(Unit) || value is Unit ? new JObject() : JToken.FromObject(value);
 
